@@ -1,0 +1,1100 @@
+{
+ "n_flights": 336776,
+ "n_weather": 26115,
+ "n_planes": 3322,
+ "status_counts": {
+  "Completed": 327346,
+  "Cancelled": 8255,
+  "Delay not recorded": 717,
+  "Diverted": 458
+ },
+ "missing_flights": {
+  "dep_time": 8255,
+  "dep_delay": 8255,
+  "arr_time": 8713,
+  "arr_delay": 9430,
+  "tailnum": 2512,
+  "air_time": 9430
+ },
+ "dup_full": 0,
+ "dup_key": 0,
+ "dep_2400": 29,
+ "arr_2400": 150,
+ "weather_dup_key": 0,
+ "planes_dup_tail": 0,
+ "wind_over_100": 1,
+ "wind_max_raw": 1048.36058,
+ "weather_missing": {
+  "temp": 1,
+  "dewp": 1,
+  "humid": 1,
+  "wind_speed": 4,
+  "wind_gust": 20778,
+  "pressure": 2729
+ },
+ "gust_missing_pct": 79.56346927053417,
+ "pressure_missing_pct": 10.449932988703809,
+ "dist": {
+  "dep_delay": {
+   "count": 328521.0,
+   "mean": 12.639070257304708,
+   "median": -2.0,
+   "std": 40.21006089212996,
+   "skewness": 4.802540511080034,
+   "min": -43.0,
+   "p90": 49.0,
+   "p99": 191.0,
+   "max": 1301.0
+  },
+  "arr_delay": {
+   "count": 327346.0,
+   "mean": 6.89537675731489,
+   "median": -5.0,
+   "std": 44.63329169019399,
+   "skewness": 3.7168174804571876,
+   "min": -86.0,
+   "p90": 52.0,
+   "p99": 190.0,
+   "max": 1272.0
+  },
+  "distance": {
+   "count": 336776.0,
+   "mean": 1039.9126036297123,
+   "median": 872.0,
+   "std": 733.2330333236777,
+   "skewness": 1.1286901510463856,
+   "min": 17.0,
+   "p90": 2446.0,
+   "p99": 2586.0,
+   "max": 4983.0
+  }
+ },
+ "iqr_out_dep_delay": 43216,
+ "iqr_hi_dep_delay": 35.0,
+ "iqr_out_arr_delay": 27880,
+ "iqr_hi_arr_delay": 60.5,
+ "weather_log": {
+  "impossible_wind": 1,
+  "missing_before": {
+   "temp": 1,
+   "dewp": 1,
+   "humid": 1,
+   "wind_speed": 5,
+   "wind_dir": 460,
+   "pressure": 2729
+  },
+  "missing_after": {
+   "temp": 0,
+   "dewp": 0,
+   "humid": 0,
+   "wind_speed": 0,
+   "wind_dir": 0,
+   "pressure": 0
+  }
+ },
+ "no_weather_rows": 1556,
+ "no_plane_rows": 57912,
+ "n_dep_ok": 328521,
+ "n_arr_ok": 327346,
+ "cleaning_table": [
+  {
+   "issue": "Missing departure data (cancelled flights)",
+   "count": 8255,
+   "action": "Labelled status = Cancelled; excluded from delay statistics but analysed separately",
+   "reason": "A cancelled flight has no delay; imputing one would invent data"
+  },
+  {
+   "issue": "Missing arrival data (diverted flights)",
+   "count": 458,
+   "action": "Labelled status = Diverted; excluded from arrival-delay statistics",
+   "reason": "They never reached the planned destination"
+  },
+  {
+   "issue": "Arrival delay not recorded",
+   "count": 717,
+   "action": "Labelled; excluded from arrival-delay statistics",
+   "reason": "Cannot be reconstructed reliably"
+  },
+  {
+   "issue": "Times stored as hhmm integers (e.g. 517)",
+   "count": 336776,
+   "action": "Converted to minutes after midnight (517 -> 317); 2400 -> 0",
+   "reason": "Integers like 1230 vs 1229 look 1 apart but are 61 minutes apart"
+  },
+  {
+   "issue": "Time value 2400 (midnight)",
+   "count": 179,
+   "action": "Mapped to 0",
+   "reason": "2400 is not a valid clock time"
+  },
+  {
+   "issue": "time_hour stored as text",
+   "count": 336776,
+   "action": "Converted to timezone-aware datetime; built date and weekday",
+   "reason": "Needed for joining weather and for time analysis"
+  },
+  {
+   "issue": "Duplicate flight records",
+   "count": 0,
+   "action": "None found (checked full rows and the business key)",
+   "reason": "Verified, nothing removed"
+  },
+  {
+   "issue": "Impossible wind speed (1,048 mph)",
+   "count": 1,
+   "action": "Set to missing, then interpolated within the same airport (max 6 hours)",
+   "reason": "Physically impossible; most likely a sensor or entry error"
+  },
+  {
+   "issue": "Short weather gaps (temp, humidity, wind, direction, pressure)",
+   "count": 3197,
+   "action": "Linear interpolation within airport, limit 6 hours",
+   "reason": "Weather changes smoothly hour to hour, so short gaps can be filled safely"
+  },
+  {
+   "issue": "wind_gust missing in 80% of hours",
+   "count": 20778,
+   "action": "Not imputed and NOT used in models",
+   "reason": "Gusts are only reported when significant, so missing = no gusts, not unknown"
+  },
+  {
+   "issue": "Flights without a weather record for their hour",
+   "count": 1556,
+   "action": "Kept; weather columns stay missing (rows dropped only inside the model)",
+   "reason": "Missing hours in the weather table"
+  },
+  {
+   "issue": "Flights with unknown aircraft age",
+   "count": 57912,
+   "action": "Kept; age missing, flagged in the model",
+   "reason": "Tail number absent from the planes registry"
+  },
+  {
+   "issue": "Needed analysis columns",
+   "count": 336776,
+   "action": "Created delayed flags (>=15 min), air_gain, aircraft_age, distance band, time-of-day band, season, categorical types",
+   "reason": "Domain-standard definitions and compact types"
+  }
+ ],
+ "overall": {
+  "cancel_rate": 2.451184169893341,
+  "dep_delayed_pct": 22.1946237835633,
+  "arr_delayed_pct": 24.46952154600942,
+  "dep_early_pct": 55.879228420709794,
+  "dep_ontime_or_early_pct": 77.8053762164367,
+  "arr_over60_pct": 8.65047992032895,
+  "arr_over120_pct": 3.1159690358214243,
+  "dep_mean": 12.639070257304708,
+  "dep_median": -2.0,
+  "arr_mean": 6.89537675731489,
+  "arr_median": -5.0,
+  "top10pct_share_of_delay_minutes": 41.41258740216121,
+  "total_delay_hours": 89428.56666666667
+ },
+ "kw_carrier": {
+  "H": 8564.975688344912,
+  "p": 0.0,
+  "k": 16,
+  "epsilon2": 0.026120354652323072
+ },
+ "carrier_table": [
+  {
+   "carrier": "F9",
+   "flights": 681,
+   "mean_arr": 21.92,
+   "median_arr": 6.0,
+   "delayed": 264.0,
+   "pct_delayed": 38.77,
+   "ci_low": 35.18,
+   "ci_high": 42.48,
+   "cancel_rate": 0.43795620437956206,
+   "airline": "Frontier Airlines Inc."
+  },
+  {
+   "carrier": "FL",
+   "flights": 3175,
+   "mean_arr": 20.12,
+   "median_arr": 5.0,
+   "delayed": 1100.0,
+   "pct_delayed": 34.65,
+   "ci_low": 33.01,
+   "ci_high": 36.32,
+   "cancel_rate": 2.2392638036809815,
+   "airline": "AirTran Airways Corporation"
+  },
+  {
+   "carrier": "YV",
+   "flights": 544,
+   "mean_arr": 15.56,
+   "median_arr": -2.0,
+   "delayed": 179.0,
+   "pct_delayed": 32.9,
+   "ci_low": 29.09,
+   "ci_high": 36.96,
+   "cancel_rate": 9.317803660565724,
+   "airline": "Mesa Airlines Inc."
+  },
+  {
+   "carrier": "EV",
+   "flights": 51108,
+   "mean_arr": 15.8,
+   "median_arr": -1.0,
+   "delayed": 16399.0,
+   "pct_delayed": 32.09,
+   "ci_low": 31.68,
+   "ci_high": 32.49,
+   "cancel_rate": 5.2000073837520535,
+   "airline": "ExpressJet Airlines Inc."
+  },
+  {
+   "carrier": "MQ",
+   "flights": 25037,
+   "mean_arr": 10.77,
+   "median_arr": -1.0,
+   "delayed": 6986.0,
+   "pct_delayed": 27.9,
+   "ci_low": 27.35,
+   "ci_high": 28.46,
+   "cancel_rate": 4.674773648520665,
+   "airline": "Envoy Air"
+  },
+  {
+   "carrier": "B6",
+   "flights": 54049,
+   "mean_arr": 9.46,
+   "median_arr": -3.0,
+   "delayed": 14567.0,
+   "pct_delayed": 26.95,
+   "ci_low": 26.58,
+   "ci_high": 27.33,
+   "cancel_rate": 0.8529331014917177,
+   "airline": "JetBlue Airways"
+  },
+  {
+   "carrier": "WN",
+   "flights": 12044,
+   "mean_arr": 9.65,
+   "median_arr": -3.0,
+   "delayed": 3094.0,
+   "pct_delayed": 25.69,
+   "ci_low": 24.92,
+   "ci_high": 26.48,
+   "cancel_rate": 1.5641547861507128,
+   "airline": "Southwest Airlines Co."
+  },
+  {
+   "carrier": "9E",
+   "flights": 17294,
+   "mean_arr": 7.38,
+   "median_arr": -7.0,
+   "delayed": 4422.0,
+   "pct_delayed": 25.57,
+   "ci_low": 24.92,
+   "ci_high": 26.23,
+   "cancel_rate": 5.655471289274106,
+   "airline": "Endeavor Air Inc."
+  },
+  {
+   "carrier": "OO",
+   "flights": 29,
+   "mean_arr": 11.93,
+   "median_arr": -7.0,
+   "delayed": 7.0,
+   "pct_delayed": 24.14,
+   "ci_low": 12.22,
+   "ci_high": 42.11,
+   "cancel_rate": 9.375,
+   "airline": "SkyWest Airlines Inc."
+  },
+  {
+   "carrier": "UA",
+   "flights": 57782,
+   "mean_arr": 3.56,
+   "median_arr": -6.0,
+   "delayed": 13004.0,
+   "pct_delayed": 22.51,
+   "ci_low": 22.17,
+   "ci_high": 22.85,
+   "cancel_rate": 1.1693514020284668,
+   "airline": "United Air Lines Inc."
+  },
+  {
+   "carrier": "AA",
+   "flights": 31947,
+   "mean_arr": 0.36,
+   "median_arr": -9.0,
+   "delayed": 6203.0,
+   "pct_delayed": 19.42,
+   "ci_low": 18.99,
+   "ci_high": 19.85,
+   "cancel_rate": 1.9432307739313759,
+   "airline": "American Airlines Inc."
+  },
+  {
+   "carrier": "DL",
+   "flights": 47658,
+   "mean_arr": 1.64,
+   "median_arr": -8.0,
+   "delayed": 9038.0,
+   "pct_delayed": 18.96,
+   "ci_low": 18.61,
+   "ci_high": 19.32,
+   "cancel_rate": 0.7254209104136354,
+   "airline": "Delta Air Lines Inc."
+  },
+  {
+   "carrier": "US",
+   "flights": 19831,
+   "mean_arr": 2.13,
+   "median_arr": -6.0,
+   "delayed": 3733.0,
+   "pct_delayed": 18.82,
+   "ci_low": 18.29,
+   "ci_high": 19.37,
+   "cancel_rate": 3.2284768211920527,
+   "airline": "US Airways Inc."
+  },
+  {
+   "carrier": "VX",
+   "flights": 5116,
+   "mean_arr": 1.76,
+   "median_arr": -9.0,
+   "delayed": 956.0,
+   "pct_delayed": 18.69,
+   "ci_low": 17.64,
+   "ci_high": 19.78,
+   "cancel_rate": 0.6005424254165053,
+   "airline": "Virgin America"
+  },
+  {
+   "carrier": "AS",
+   "flights": 709,
+   "mean_arr": -9.93,
+   "median_arr": -17.0,
+   "delayed": 104.0,
+   "pct_delayed": 14.67,
+   "ci_low": 12.25,
+   "ci_high": 17.46,
+   "cancel_rate": 0.2801120448179272,
+   "airline": "Alaska Airlines Inc."
+  },
+  {
+   "carrier": "HA",
+   "flights": 342,
+   "mean_arr": -6.92,
+   "median_arr": -13.0,
+   "delayed": 44.0,
+   "pct_delayed": 12.87,
+   "ci_low": 9.73,
+   "ci_high": 16.83,
+   "cancel_rate": 0.0,
+   "airline": "Hawaiian Airlines Inc."
+  }
+ ],
+ "kw_origin": {
+  "H": 5367.8473124134425,
+  "p": 0.0
+ },
+ "origin_table": [
+  {
+   "origin": "EWR",
+   "dep_flights": 117596,
+   "dep_mean": 15.11,
+   "dep_median": -1.0,
+   "dep_delayed_pct": 25.32,
+   "arr_delayed_pct": 26.336369923245705,
+   "cancel_rate": 2.680514751520669,
+   "airport": "Newark (EWR)"
+  },
+  {
+   "origin": "JFK",
+   "dep_flights": 109416,
+   "dep_mean": 12.11,
+   "dep_median": -1.0,
+   "dep_delayed_pct": 21.34,
+   "arr_delayed_pct": 23.69750364414782,
+   "cancel_rate": 1.6741703286334348,
+   "airport": "John F. Kennedy (JFK)"
+  },
+  {
+   "origin": "LGA",
+   "dep_flights": 101509,
+   "dep_mean": 10.35,
+   "dep_median": -3.0,
+   "dep_delayed_pct": 19.5,
+   "arr_delayed_pct": 23.140201700613012,
+   "cancel_rate": 3.012554699891078,
+   "airport": "LaGuardia (LGA)"
+  }
+ ],
+ "hour": {
+  "rho": 0.2298053113398917,
+  "p": 0.0,
+  "early_mean": 2.093144574974155,
+  "early_pct": 9.360433322048905,
+  "evening_pct": 33.58331495233194,
+  "night_pct": 36.07160546239298,
+  "h5_pct": 6.327160493827161,
+  "h5_mean": 0.6877572016460906,
+  "peak_hour": 21,
+  "peak_pct": 37.84682630178639,
+  "peak_mean": 24.195743063473966,
+  "h5_flights": 1944,
+  "peak_flights": 10524
+ },
+ "tod_table": [
+  {
+   "tod": "Early (to 8)",
+   "flights": 76802,
+   "mean_dep": 2.57,
+   "median_dep": -3.0,
+   "delayed_pct": 9.36
+  },
+  {
+   "tod": "Late morning (9-11)",
+   "flights": 52140,
+   "mean_dep": 5.97,
+   "median_dep": -3.0,
+   "delayed_pct": 14.22
+  },
+  {
+   "tod": "Afternoon (12-16)",
+   "flights": 103840,
+   "mean_dep": 14.22,
+   "median_dep": -1.0,
+   "delayed_pct": 24.85
+  },
+  {
+   "tod": "Evening (17-20)",
+   "flights": 81606,
+   "mean_dep": 22.66,
+   "median_dep": 1.0,
+   "delayed_pct": 33.58
+  },
+  {
+   "tod": "Night (21+)",
+   "flights": 14133,
+   "mean_dep": 22.46,
+   "median_dep": 1.0,
+   "delayed_pct": 36.07
+  }
+ ],
+ "month_table": [
+  {
+   "month": 1,
+   "mean_dep": 10.04,
+   "delayed_pct": 19.22,
+   "cancel_rate": 1.93,
+   "cancelled": 521
+  },
+  {
+   "month": 2,
+   "mean_dep": 10.82,
+   "delayed_pct": 20.94,
+   "cancel_rate": 5.05,
+   "cancelled": 1261
+  },
+  {
+   "month": 3,
+   "mean_dep": 13.23,
+   "delayed_pct": 22.94,
+   "cancel_rate": 2.99,
+   "cancelled": 861
+  },
+  {
+   "month": 4,
+   "mean_dep": 13.94,
+   "delayed_pct": 23.15,
+   "cancel_rate": 2.36,
+   "cancelled": 668
+  },
+  {
+   "month": 5,
+   "mean_dep": 12.99,
+   "delayed_pct": 23.54,
+   "cancel_rate": 1.96,
+   "cancelled": 563
+  },
+  {
+   "month": 6,
+   "mean_dep": 20.85,
+   "delayed_pct": 29.43,
+   "cancel_rate": 3.57,
+   "cancelled": 1009
+  },
+  {
+   "month": 7,
+   "mean_dep": 21.73,
+   "delayed_pct": 30.33,
+   "cancel_rate": 3.19,
+   "cancelled": 940
+  },
+  {
+   "month": 8,
+   "mean_dep": 12.61,
+   "delayed_pct": 22.86,
+   "cancel_rate": 1.66,
+   "cancelled": 486
+  },
+  {
+   "month": 9,
+   "mean_dep": 6.72,
+   "delayed_pct": 14.41,
+   "cancel_rate": 1.64,
+   "cancelled": 452
+  },
+  {
+   "month": 10,
+   "mean_dep": 6.24,
+   "delayed_pct": 15.45,
+   "cancel_rate": 0.82,
+   "cancelled": 236
+  },
+  {
+   "month": 11,
+   "mean_dep": 5.44,
+   "delayed_pct": 15.05,
+   "cancel_rate": 0.85,
+   "cancelled": 233
+  },
+  {
+   "month": 12,
+   "mean_dep": 16.58,
+   "delayed_pct": 28.58,
+   "cancel_rate": 3.64,
+   "cancelled": 1025
+  }
+ ],
+ "month": {
+  "worst": "Jul",
+  "worst_pct": 30.32824293487801,
+  "worst_mean": 21.727786554326837,
+  "best": "Sep",
+  "best_pct": 14.408966890347319,
+  "best_mean": 6.7224762185679525
+ },
+ "weekday_table": [
+  {
+   "weekday": "Monday",
+   "mean_dep": 14.78,
+   "delayed_pct": 23.64
+  },
+  {
+   "weekday": "Tuesday",
+   "mean_dep": 10.63,
+   "delayed_pct": 20.69
+  },
+  {
+   "weekday": "Wednesday",
+   "mean_dep": 11.8,
+   "delayed_pct": 20.96
+  },
+  {
+   "weekday": "Thursday",
+   "mean_dep": 16.15,
+   "delayed_pct": 25.74
+  },
+  {
+   "weekday": "Friday",
+   "mean_dep": 14.7,
+   "delayed_pct": 24.81
+  },
+  {
+   "weekday": "Saturday",
+   "mean_dep": 7.65,
+   "delayed_pct": 17.23
+  },
+  {
+   "weekday": "Sunday",
+   "mean_dep": 11.59,
+   "delayed_pct": 21.13
+  }
+ ],
+ "season_table": [
+  {
+   "season": "Autumn",
+   "delayed_pct": 14.98,
+   "mean_dep": 6.14
+  },
+  {
+   "season": "Spring",
+   "delayed_pct": 23.21,
+   "mean_dep": 13.38
+  },
+  {
+   "season": "Summer",
+   "delayed_pct": 27.49,
+   "mean_dep": 18.33
+  },
+  {
+   "season": "Winter",
+   "delayed_pct": 23.03,
+   "mean_dep": 12.57
+  }
+ ],
+ "kw_month": {
+  "H": 8668.855003944736,
+  "p": 0.0
+ },
+ "heat_max": 46.37182448036952,
+ "heat_max_cell": [
+  "Jul",
+  19
+ ],
+ "heat_min": -4.255813953488372,
+ "prop": {
+  "r": 0.9148027588556933,
+  "r2": 0.8368640876099878,
+  "slope": 1.0190929155473205,
+  "intercept": -5.899493477084252,
+  "ci_low": 1.0175515168635658,
+  "ci_high": 1.0206343142310752,
+  "spearman": 0.6263611666243869
+ },
+ "recovery_all_pct": 20.08146920740127,
+ "recovery_all_gain": 3.7896437448218725,
+ "late_dep_n": 72420,
+ "recovery_table": [
+  {
+   "dist_band": "<500 mi",
+   "late_departures": 18279,
+   "mean_minutes_gained": 2.4,
+   "recovered_pct": 14.79
+  },
+  {
+   "dist_band": "500-1,000",
+   "late_departures": 24225,
+   "mean_minutes_gained": 2.68,
+   "recovered_pct": 17.59
+  },
+  {
+   "dist_band": "1,000-2,000",
+   "late_departures": 19915,
+   "mean_minutes_gained": 4.49,
+   "recovered_pct": 22.59
+  },
+  {
+   "dist_band": ">2,000 mi",
+   "late_departures": 10001,
+   "mean_minutes_gained": 7.63,
+   "recovered_pct": 30.8
+  }
+ ],
+ "gain_all_mean": 5.659778949490753,
+ "vis_table": [
+  {
+   "vis_band": "<=1 mi",
+   "flights": 4963,
+   "mean_dep": 30.4,
+   "delayed_pct": 35.89,
+   "cancel_rate": 8.919067718847495
+  },
+  {
+   "vis_band": "1-3 mi",
+   "flights": 10426,
+   "mean_dep": 23.15,
+   "delayed_pct": 33.52,
+   "cancel_rate": 7.8405374348095105
+  },
+  {
+   "vis_band": "3-6 mi",
+   "flights": 12639,
+   "mean_dep": 20.22,
+   "delayed_pct": 29.54,
+   "cancel_rate": 5.1268578291547815
+  },
+  {
+   "vis_band": "6-10 mi",
+   "flights": 25305,
+   "mean_dep": 19.24,
+   "delayed_pct": 26.87,
+   "cancel_rate": 4.136833731105807
+  },
+  {
+   "vis_band": "10 mi (clear)",
+   "flights": 273660,
+   "mean_dep": 10.95,
+   "delayed_pct": 20.73,
+   "cancel_rate": 1.8221346851355569
+  }
+ ],
+ "rain": {
+  "n_rain": 21086,
+  "n_dry": 305907,
+  "pct_rain": 39.98861804040595,
+  "pct_dry": 20.9580035762503,
+  "median_rain": 5.0,
+  "median_dry": -2.0,
+  "mean_rain": 30.927724556577825,
+  "mean_dry": 11.374509246274194,
+  "mw_p": 0.0,
+  "cles": 0.6360409570059196,
+  "rr": 1.9080356530581584,
+  "rr_low": 1.8741667006308715,
+  "rr_high": 1.9425166673357253
+ },
+ "cold_pct": 20.98406936882436,
+ "cold_n": 24795,
+ "windy_pct": 27.38643185911547,
+ "windy_n": 19988,
+ "calm_pct": 21.846549730460417,
+ "weather_spearman": {
+  "temp": 0.049199724420537494,
+  "humid": 0.0941291811322138,
+  "wind_speed": 0.06321333756459592,
+  "visib": -0.08351618865587115,
+  "precip": 0.1164848483694908
+ },
+ "top_cancel_days": [
+  {
+   "date": "08 Feb 2013",
+   "cancelled": 472,
+   "scheduled": 930,
+   "pct": 50.752688172043015
+  },
+  {
+   "date": "09 Feb 2013",
+   "cancelled": 393,
+   "scheduled": 684,
+   "pct": 57.45614035087719
+  },
+  {
+   "date": "23 May 2013",
+   "cancelled": 221,
+   "scheduled": 988,
+   "pct": 22.36842105263158
+  },
+  {
+   "date": "10 Dec 2013",
+   "cancelled": 204,
+   "scheduled": 943,
+   "pct": 21.633085896076352
+  },
+  {
+   "date": "12 Sep 2013",
+   "cancelled": 192,
+   "scheduled": 992,
+   "pct": 19.35483870967742
+  }
+ ],
+ "top5_cancel_share": 17.95275590551181,
+ "top2_cancel_share": 10.478497880072684,
+ "median_daily_cancel": 7.0,
+ "days_ge50": 48,
+ "n_days": 365,
+ "days_ge50_share": 63.22228952150212,
+ "days_ge50_pct_of_year": 13.150684931506849,
+ "cancel_rain": {
+  "rate_rain": 8.329710459960003,
+  "rate_dry": 2.021344060880539,
+  "rr": 4.1208771040846015,
+  "rr_low": 3.922488577574179,
+  "rr_high": 4.329299568660771,
+  "chi2": 3558.6552636831807,
+  "p": 0.0
+ },
+ "age": {
+  "rho": -0.024518723367134603,
+  "p": 1.074730700539656e-37,
+  "n": 273853,
+  "min_pct": 20.966247518199868,
+  "max_pct": 26.554346619296105
+ },
+ "age_table": [
+  {
+   "age_band": "0-5 yrs",
+   "flights": 45889,
+   "mean_arr": 4.88,
+   "delayed_pct": 22.95
+  },
+  {
+   "age_band": "6-10",
+   "flights": 72056,
+   "mean_arr": 9.41,
+   "delayed_pct": 26.55
+  },
+  {
+   "age_band": "11-15",
+   "flights": 107120,
+   "mean_arr": 7.89,
+   "delayed_pct": 25.35
+  },
+  {
+   "age_band": "16-20",
+   "flights": 15110,
+   "mean_arr": 3.24,
+   "delayed_pct": 20.97
+  },
+  {
+   "age_band": "20+ yrs",
+   "flights": 33678,
+   "mean_arr": 3.9,
+   "delayed_pct": 21.66
+  }
+ ],
+ "busiest_dest": [
+  {
+   "dest": "ATL",
+   "flights": 16837,
+   "mean_arr": 11.3,
+   "delayed_pct": 26.23,
+   "airport": "Hartsfield Jackson Atlanta Intl"
+  },
+  {
+   "dest": "ORD",
+   "flights": 16566,
+   "mean_arr": 5.88,
+   "delayed_pct": 23.98,
+   "airport": "Chicago Ohare Intl"
+  },
+  {
+   "dest": "LAX",
+   "flights": 16026,
+   "mean_arr": 0.55,
+   "delayed_pct": 21.0,
+   "airport": "Los Angeles Intl"
+  },
+  {
+   "dest": "BOS",
+   "flights": 15022,
+   "mean_arr": 2.91,
+   "delayed_pct": 19.01,
+   "airport": "General Edward Lawrence Logan Intl"
+  },
+  {
+   "dest": "MCO",
+   "flights": 13967,
+   "mean_arr": 5.45,
+   "delayed_pct": 22.85,
+   "airport": "Orlando Intl"
+  }
+ ],
+ "worst_dest": [
+  {
+   "dest": "RIC",
+   "flights": 2346,
+   "mean_arr": 20.11,
+   "delayed_pct": 36.57,
+   "airport": "Richmond Intl"
+  },
+  {
+   "dest": "MCI",
+   "flights": 1885,
+   "mean_arr": 14.51,
+   "delayed_pct": 32.63,
+   "airport": "Kansas City Intl"
+  },
+  {
+   "dest": "GSO",
+   "flights": 1492,
+   "mean_arr": 14.11,
+   "delayed_pct": 31.43,
+   "airport": "Piedmont Triad"
+  },
+  {
+   "dest": "JAX",
+   "flights": 2623,
+   "mean_arr": 11.84,
+   "delayed_pct": 30.23,
+   "airport": "Jacksonville Intl"
+  },
+  {
+   "dest": "CVG",
+   "flights": 3725,
+   "mean_arr": 15.36,
+   "delayed_pct": 30.23,
+   "airport": "Cincinnati Northern Kentucky Intl"
+  }
+ ],
+ "best_dest": [
+  {
+   "dest": "MIA",
+   "flights": 11593,
+   "mean_arr": 0.3,
+   "delayed_pct": 18.84,
+   "airport": "Miami Intl"
+  },
+  {
+   "dest": "SLC",
+   "flights": 2451,
+   "mean_arr": 0.18,
+   "delayed_pct": 18.97,
+   "airport": "Salt Lake City Intl"
+  },
+  {
+   "dest": "BOS",
+   "flights": 15022,
+   "mean_arr": 2.91,
+   "delayed_pct": 19.01,
+   "airport": "General Edward Lawrence Logan Intl"
+  }
+ ],
+ "corr_dep_arr": 0.6263611666265043,
+ "corr_dist_air": 0.9844446623705377,
+ "model_rows": 325819,
+ "model_dropped": 1527,
+ "model": {
+  "n_train": 260655,
+  "n_test": 65164,
+  "n_features": 43,
+  "base_rate": 24.45215149469032,
+  "baseline_acc": 75.54784850530967,
+  "acc_05": 77.12694125590816,
+  "auc_logit": 0.7167871827116634,
+  "pseudo_r2": 0.09973788710271558,
+  "top_decile_rate": 57.77198097284027,
+  "bottom_decile_rate": 8.378088077336198,
+  "lift_top": 2.3626543040756642,
+  "auc_hgb": 0.7768451410412456
+ },
+ "or_table": [
+  {
+   "odds_ratio": 1.1164,
+   "ci_low": 1.114,
+   "ci_high": 1.1188,
+   "p": 0.0,
+   "label": "Each later scheduled hour"
+  },
+  {
+   "odds_ratio": 1.0618,
+   "ci_low": 1.044,
+   "ci_high": 1.0799,
+   "p": 0.0,
+   "label": "Each extra 1,000 miles"
+  },
+  {
+   "odds_ratio": 1.036,
+   "ci_low": 1.024,
+   "ci_high": 1.0481,
+   "p": 0.0,
+   "label": "Each +10 F temperature"
+  },
+  {
+   "odds_ratio": 1.1475,
+   "ci_low": 1.1403,
+   "ci_high": 1.1547,
+   "p": 0.0,
+   "label": "Each +10% humidity"
+  },
+  {
+   "odds_ratio": 1.2032,
+   "ci_low": 1.1922,
+   "ci_high": 1.2143,
+   "p": 0.0,
+   "label": "Each +5 mph wind"
+  },
+  {
+   "odds_ratio": 0.9358,
+   "ci_low": 0.9305,
+   "ci_high": 0.9412,
+   "p": 0.0,
+   "label": "Each +1 mile visibility"
+  },
+  {
+   "odds_ratio": 1.5894,
+   "ci_low": 1.5263,
+   "ci_high": 1.6552,
+   "p": 0.0,
+   "label": "Rain / precipitation (yes vs no)"
+  },
+  {
+   "odds_ratio": 1.0643,
+   "ci_low": 1.0526,
+   "ci_high": 1.076,
+   "p": 0.0,
+   "label": "Each +5 years aircraft age"
+  },
+  {
+   "odds_ratio": 0.7597,
+   "ci_low": 0.735,
+   "ci_high": 0.7852,
+   "p": 0.0,
+   "label": "JFK (vs Newark)"
+  },
+  {
+   "odds_ratio": 0.9529,
+   "ci_low": 0.9251,
+   "ci_high": 0.9816,
+   "p": 0.0014,
+   "label": "LaGuardia (vs Newark)"
+  }
+ ],
+ "or_carrier_best": {
+  "name": "carrier_AS",
+  "odds_ratio": 0.635,
+  "ci_low": 0.5,
+  "ci_high": 0.807,
+  "p": 0.0
+ },
+ "or_carrier_worst": {
+  "name": "carrier_F9",
+  "odds_ratio": 2.412,
+  "ci_low": 2.007,
+  "ci_high": 2.9,
+  "p": 0.0
+ },
+ "importance": [
+  {
+   "feature": "Scheduled hour",
+   "auc_drop": 0.10754387123587299
+  },
+  {
+   "feature": "Month",
+   "auc_drop": 0.060426847014595254
+  },
+  {
+   "feature": "Humidity",
+   "auc_drop": 0.057064732656272356
+  },
+  {
+   "feature": "Weekday",
+   "auc_drop": 0.039318070713979116
+  },
+  {
+   "feature": "Airline",
+   "auc_drop": 0.03918251077030799
+  },
+  {
+   "feature": "Temperature",
+   "auc_drop": 0.03122680696792853
+  },
+  {
+   "feature": "Distance",
+   "auc_drop": 0.013473774710406006
+  },
+  {
+   "feature": "Wind speed",
+   "auc_drop": 0.012624832840719061
+  },
+  {
+   "feature": "Airport",
+   "auc_drop": 0.008093085788303997
+  },
+  {
+   "feature": "Precipitation",
+   "auc_drop": 0.005217591087319821
+  },
+  {
+   "feature": "Visibility",
+   "auc_drop": 0.0037543180636306905
+  },
+  {
+   "feature": "Aircraft age",
+   "auc_drop": 0.001329528289613265
+  }
+ ],
+ "age_adj_or": {
+  "odds_ratio": 1.0643,
+  "ci_low": 1.0526,
+  "ci_high": 1.076,
+  "p": 0.0,
+  "label": "Each +5 years aircraft age"
+ },
+ "carrier_big": {
+  "worst": "ExpressJet Airlines Inc.",
+  "worst_pct": 32.09,
+  "best": "US Airways Inc.",
+  "best_pct": 18.82,
+  "n": 9
+ }
+}

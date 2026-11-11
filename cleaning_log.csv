@@ -1,0 +1,14 @@
+issue,count,action,reason
+Missing departure data (cancelled flights),8255,Labelled status = Cancelled; excluded from delay statistics but analysed separately,A cancelled flight has no delay; imputing one would invent data
+Missing arrival data (diverted flights),458,Labelled status = Diverted; excluded from arrival-delay statistics,They never reached the planned destination
+Arrival delay not recorded,717,Labelled; excluded from arrival-delay statistics,Cannot be reconstructed reliably
+Times stored as hhmm integers (e.g. 517),336776,Converted to minutes after midnight (517 -> 317); 2400 -> 0,Integers like 1230 vs 1229 look 1 apart but are 61 minutes apart
+Time value 2400 (midnight),179,Mapped to 0,2400 is not a valid clock time
+time_hour stored as text,336776,Converted to timezone-aware datetime; built date and weekday,Needed for joining weather and for time analysis
+Duplicate flight records,0,None found (checked full rows and the business key),"Verified, nothing removed"
+"Impossible wind speed (1,048 mph)",1,"Set to missing, then interpolated within the same airport (max 6 hours)",Physically impossible; most likely a sensor or entry error
+"Short weather gaps (temp, humidity, wind, direction, pressure)",3197,"Linear interpolation within airport, limit 6 hours","Weather changes smoothly hour to hour, so short gaps can be filled safely"
+wind_gust missing in 80% of hours,20778,Not imputed and NOT used in models,"Gusts are only reported when significant, so missing = no gusts, not unknown"
+Flights without a weather record for their hour,1556,Kept; weather columns stay missing (rows dropped only inside the model),Missing hours in the weather table
+Flights with unknown aircraft age,57912,"Kept; age missing, flagged in the model",Tail number absent from the planes registry
+Needed analysis columns,336776,"Created delayed flags (>=15 min), air_gain, aircraft_age, distance band, time-of-day band, season, categorical types",Domain-standard definitions and compact types
